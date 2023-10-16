@@ -7,6 +7,8 @@ import os
 openai.api_key = os.environ.get('OPENAI_API_KEY')
 # Initialize Streamlit
 st.title("Awesome Chatbot Test")
+temp = st.slider('What is the temparature(Celsius)?', -20, 50, 20)
+st.write("Temparature is ", temp, ' Celsius')
 # Create a text input field for user queries
 user_input = st.text_input("Ask any question:")
 # Send the user's query to OpenAI GPT-3
