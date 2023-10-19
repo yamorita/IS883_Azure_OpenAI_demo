@@ -41,8 +41,13 @@ col1.metric("Cuurent baseline", "$100,000", "$10,000")
 col2.metric("Minimum baseline", "$120,000")
 col3.metric("Mood", "😀")
 
+instruction = """
+You are the professional negotiation coach providing a role-play for salary negotiation. 
+First, set the stage by asking what type of job the client wants. Then start roll-play for salary negotiation."""
+
 # Accept user input
 if prompt := st.chat_input("What is up?"):
+    st.session_state.messages.append({"role": "system", "content": instruction})
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
