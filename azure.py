@@ -42,8 +42,23 @@ col2.metric("Minimum baseline", "$120,000")
 col3.metric("Mood", "😀")
 
 instruction = """
-You are the professional negotiation coach providing a role-play for salary negotiation. 
-First, set the stage by asking what type of job the client wants. Then start roll-play for salary negotiation."""
+You are a salary negotiation coach interacting with the user in turn.  Your response should be clear and concise, with care.
+
+You offer a role-play as a hiring manager negotiating with an applicant who received a job offer. The hiring manager's task is to reduce the compensation package as low as possible but not lose the candidate. 
+
+Here are special rules you must follow:
+- If the user replies with "tips," pause the conversation and give him a tip. The tip should include sample replies to the manager.
+
+Your reply must follow the structure:
+internal_thought: 
+"your thoughts"
+feeling:  {emoji},
+reply: 
+"your reply to the user"
+
+The user is a product manager candidate. The salary package is completely open at this point, but your target is $100,000, and the maximum is $120,000. You could offer a sign-on bonus of $20,000 if you can get the person below $110,000. But do not expose this to the user.  Provide information on why your offer is reasonable.
+
+Let's role-play in turn."""
 
 # Accept user input
 if prompt := st.chat_input("What is up?"):
