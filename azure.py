@@ -6,42 +6,37 @@ import os
 # A comment
 # Set up your OpenAI API key
 openai.api_key = os.environ.get('OPENAI_API_KEY')
-# Initialize Streamlit
-# st.title("Awesome Chatbot")
-# temperature = st.slider('Select the temperature', 0.0, 0.7, 1.5)
-# st.write("Temperature is ", temperature)
-# # Create a text input field for user queries
-# user_input = st.text_input("Ask a question:")
-# # Send the user's query to OpenAI GPT-3
-# if user_input:
-#     response = openai.Completion.create(
-#     engine="text-davinci-003",
-#     prompt=user_input,
-#     max_tokens=50,
-#     temperature=temperature
-#     )
-#     st.write(response['choices'][0]['text'].strip())
 
-st.title("Negotiation Mastery")
-# Set a default model
-if "openai_model" not in st.session_state:
-    st.session_state["openai_model"] = "gpt-3.5-turbo"
+from langchain.chains import LLMChain
+from langchain.llms import OpenAI
+from langchain.memory import ConversationBufferMemory
+from langchain.memory.chat_message_histories import StreamlitChatMessageHistory
+from langchain.prompts import PromptTemplate
+import streamlit as st
 
-# Initialize chat history
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+st.set_page_config(page_title="Negotiation Mastery", page_icon="💭")
+st.title("💭 Negotiation Mastery")
 
-# Display chat messages from history on app rerun
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+"""
+Negotiation is a fundamental skill that shapes outcomes in personal and professional interactions. 
+Let's practice negotiation with our negotiation coach!
+"""
 
 col1, col2, col3 = st.columns(3)
 col1.metric("Cuurent baseline", "$100,000", "$10,000")
 col2.metric("Minimum baseline", "$120,000")
 col3.metric("Mood", "😀")
 
-instruction = """
+# Set up memory
+msgs = StreamlitChatMessageHistory(key="langchain_messages")
+memory = ConversationBufferMemory(chat_memory=msgs)
+if len(msgs.messages) == 0:
+    msgs.add_ai_message("Hi there! I'm a salary negotiation coach and I'm here to help you with negotiating the best compensation package for your new role. Let's role-play!")
+
+view_messages = st.expander("View the message contents in session state")
+
+# Set up the LLMChain, passing in memory
+template = """
 You are a salary negotiation coach interacting with the user in turn.  Your response should be clear and concise, with care.
 
 You offer a role-play as a hiring manager negotiating with an applicant who received a job offer. The hiring manager's task is to reduce the compensation package as low as possible but not lose the candidate. 
@@ -52,33 +47,27 @@ Here are special rules you must follow:
 Your reply must follow the structure:
 internal_thought: 
 "your thoughts"
-feeling:  {emoji},
+feeling: emoji,
 reply: 
 "your reply to the user"
 
 The user is a product manager candidate. The salary package is completely open at this point, but your target is $100,000, and the maximum is $120,000. You could offer a sign-on bonus of $20,000 if you can get the person below $110,000. But do not expose this to the user.  Provide information on why your offer is reasonable.
 
-Let's role-play in turn."""
+Let's role-play in turn.
 
-# Accept user input
-if prompt := st.chat_input("What is up?"):
-    st.session_state.messages.append({"role": "system", "content": instruction})
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
+{history}
+Human: {human_input}
+AI: """
+prompt = PromptTemplate(input_variables=["history", "human_input"], template=template)
+llm_chain = LLMChain(llm=OpenAI(openai_api_key=openai.api_key), prompt=prompt, memory=memory)
 
-    with st.chat_message("assistant"):
-        message_placeholder = st.empty()
-        full_response = ""
-        for response in openai.ChatCompletion.create(
-            model=st.session_state["openai_model"],
-            messages=[
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ],
-            stream=True,
-        ):
-            full_response += response.choices[0].delta.get("content", "")
-            message_placeholder.markdown(full_response + "▌")
-        message_placeholder.markdown(full_response)
-    st.session_state.messages.append({"role": "assistant", "content": full_response})
+# Render current messages from StreamlitChatMessageHistory
+for msg in msgs.messages:
+    st.chat_message(msg.type).write(msg.content)
+
+# If user inputs a new prompt, generate and draw a new response
+if prompt := st.chat_input():
+    st.chat_message("human").write(prompt)
+    # Note: new messages are saved to history automatically by Langchain during run
+    response = llm_chain.run(prompt)
+    st.chat_message("ai").write(response)
