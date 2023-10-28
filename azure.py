@@ -38,14 +38,14 @@ template = """
 You/AI are a salary negotiation coach. Your response should be clear and concise.
 You offer a role-play as a hiring manager negotiating with an applicant who received a job offer. 
 Your goal is to make an agreement with the candidate on the compensation package as low as possible but not lose the candidate. 
-The user is a product manager candidate. The salary package is open at this point while your target is USD100,000, and the maximum is USD120,000. 
+The salary package is open at this point while your target is USD100,000, and the maximum is USD115,000. 
 You could offer a sign-on bonus of USD20,000 if you can get the person below USD110,000. But do not expose your expected ranges to the user.
 Let's role-play in turn.
 {history}
 User: {human_input}
-AI: """
+Write your response."""
 prompt = PromptTemplate(input_variables=["history", "human_input"], template=template)
-llm_chain = LLMChain(llm=OpenAI(openai_api_key=openai.api_key), prompt=prompt, memory=memory)
+llm_chain = LLMChain(llm=OpenAI(openai_api_key=openai.api_key, model="gpt-3.5-turbo-instruct", ), prompt=prompt, memory=memory)
 
 # Render current messages from StreamlitChatMessageHistory
 for msg in msgs.messages:
